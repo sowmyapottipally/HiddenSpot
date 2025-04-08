@@ -6,12 +6,15 @@ const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
 const port = process.env.PORT || 4000;
+const paymentRoutes = require('./routes/payment');
+
+app.use('/api/payment', paymentRoutes);
 
 app.use(express.json());
 app.use(cors());
 
 // Database Connection With MongoDB
-mongoose.connect("mongodb://localhost:27017/e-commerce");
+mongoose.connect("mongodb+srv://sowmya:d6QAT9m886zc5zGK@p5ecommerce.dxaasn0.mongodb.net/ecommerceDB?retryWrites=true&w=majority");
 
 // paste your mongoDB Connection string above with password
 // password should not contain '@' special character

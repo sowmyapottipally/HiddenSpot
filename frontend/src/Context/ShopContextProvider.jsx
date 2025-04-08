@@ -3,24 +3,22 @@ import { backend_url } from "../App";
 
 export const ShopContext = createContext(null);
 
-const getDefaultCart = () => {
+// 🔧 Initialize cart with 300 items set to 0
+function getDefaultCart() {
   let cart = {};
   for (let i = 0; i < 300; i++) {
     cart[i] = 0;
   }
   return cart;
-};
+}
 
 const ShopContextProvider = (props) => {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState(getDefaultCart());
-  const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem("wishlist");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [wishlist, setWishlist] = useState([]);
 
-  // Load products and cart on mount
   useEffect(() => {
+    // ✅ Fixed template literals
     fetch(`${backend_url}/allproducts`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
@@ -36,53 +34,47 @@ const ShopContextProvider = (props) => {
         body: JSON.stringify(),
       })
         .then((resp) => resp.json())
-        .then((data) => {
-          setCartItems(data);
-        });
+        .then((data) => setCartItems(data));
+    }
+
+    // ✅ Load wishlist from localStorage
+    const storedWishlist = JSON.parse(localStorage.getItem("wishlist"));
+    if (storedWishlist) {
+      setWishlist(storedWishlist);
     }
   }, []);
 
-  // Save wishlist to localStorage on change
-  useEffect(() => {
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-  }, [wishlist]);
-
   const toggleWishlist = (itemId) => {
-    setWishlist((prev) =>
-      prev.includes(itemId)
+    setWishlist((prev) => {
+      const updated = prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
-    );
+        : [...prev, itemId];
+      localStorage.setItem("wishlist", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const getTotalCartAmount = () => {
     let totalAmount = 0;
     for (const item in cartItems) {
       if (cartItems[item] > 0) {
-        try {
-          const itemInfo = products.find(
-            (product) => product.id === Number(item)
-          );
+        const itemInfo = products.find((product) => product.id === Number(item));
+        if (itemInfo) {
           totalAmount += cartItems[item] * itemInfo.new_price;
-        } catch (error) {}
+        }
       }
     }
     return totalAmount;
   };
 
   const getTotalCartItems = () => {
-    let totalItem = 0;
+    let totalItems = 0;
     for (const item in cartItems) {
       if (cartItems[item] > 0) {
-        try {
-          const itemInfo = products.find(
-            (product) => product.id === Number(item)
-          );
-          totalItem += itemInfo ? cartItems[item] : 0;
-        } catch (error) {}
+        totalItems += cartItems[item];
       }
     }
-    return totalItem;
+    return totalItems;
   };
 
   const addToCart = (itemId) => {
@@ -90,7 +82,9 @@ const ShopContextProvider = (props) => {
       alert("Please Login");
       return;
     }
+
     setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
+
     fetch(`${backend_url}/addtocart`, {
       method: "POST",
       headers: {
@@ -104,6 +98,7 @@ const ShopContextProvider = (props) => {
 
   const removeFromCart = (itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
+
     fetch(`${backend_url}/removefromcart`, {
       method: "POST",
       headers: {
@@ -118,12 +113,12 @@ const ShopContextProvider = (props) => {
   const contextValue = {
     products,
     cartItems,
+    wishlist,
+    getTotalCartItems,
+    getTotalCartAmount,
     addToCart,
     removeFromCart,
-    getTotalCartAmount,
-    getTotalCartItems,
-    wishlist,
-    toggleWishlist, // ✅ exposed for use in Wishlist page
+    toggleWishlist,
   };
 
   return (

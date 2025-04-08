@@ -11,6 +11,7 @@ import kid_banner from "./Components/Assets/banner_kids.png";
 import LoginSignup from "./Pages/LoginSignup";
 import About from "./Pages/About/About";
 import Contact from "./Pages/Contact/Contact";
+import Wishlist from "./Pages/Wishlist";
 
 export const backend_url = 'http://localhost:4000';
 export const currency = '₹';
@@ -32,6 +33,7 @@ function App() {
             <Route path=':productId' element={<Product />} />
      
           </Route>
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<LoginSignup/>} />
         </Routes>
